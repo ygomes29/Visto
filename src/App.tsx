@@ -1,396 +1,557 @@
-import { useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import './App.css';
+import LeadForm from './LeadForm';
 import {
-  Menu, ArrowRight, Play, Check,
-  Users, Clock, ShoppingBag,
-  Smartphone, CreditCard, Sparkles, MessageCircle,
-  BarChart3, LayoutDashboard, Instagram, Twitter, Linkedin, Store
+  Menu, X, ArrowRight, ArrowUpRight, Check, Sparkles,
+  Users, MessageCircle, Megaphone, Gift, RefreshCcw, BarChart3,
+  UserX, PackageOpen, MessageSquareOff, Heart, ShoppingBag, Search,
+  Star, Clock, Plug, Brain, Send, Shirt, Bell, Instagram, Linkedin,
 } from 'lucide-react';
 
-function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+/* ---------- helpers ---------- */
+
+function useReveal() {
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>('[data-reveal]');
+    if (!('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      }),
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+}
+
+function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
+  return (
+    <div data-reveal className={`reveal ${className}`} style={{ transitionDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
+function SectionHead({ eyebrow, title, sub }: { eyebrow: string; title: ReactNode; sub?: string }) {
+  return (
+    <Reveal className="section-head">
+      <span className="eyebrow">{eyebrow}</span>
+      <h2>{title}</h2>
+      {sub && <p>{sub}</p>}
+    </Reveal>
+  );
+}
+
+const NAV = [
+  { href: '#produto', label: 'Produto' },
+  { href: '#diferencial', label: 'Diferencial' },
+  { href: '#como-funciona', label: 'Como funciona' },
+];
+
+/* ---------- header ---------- */
+
+function Header({ onCta }: { onCta: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : '';
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
 
   return (
-    <div className="app">
-      {/* 1. HEADER */}
-      <header className="header">
-        <div className="container header-container">
-          <div className="logo-wrapper">
-            <span className="logo-text">vist<span className="logo-o">O</span></span>
-          </div>
-
-          <nav className="nav-links">
-            <a href="#produto">Produto</a>
-            <a href="#solucoes">Soluções</a>
-            <a href="#precos">Preços</a>
-            <a href="#recursos">Recursos</a>
-            <a href="#sobre">Sobre</a>
-          </nav>
-
-          <div className="header-actions">
-            <button className="btn btn-ghost">Login</button>
-            <button className="btn btn-primary">Começar agora</button>
-          </div>
-
-          <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <Menu />
-          </button>
+    <header className={`nav-wrap ${scrolled ? 'is-scrolled' : ''} ${open ? 'is-open' : ''}`}>
+      <nav className="nav glass" aria-label="Principal">
+        <a href="#top" className="nav-logo" aria-label="Visto — início">
+          <img src="/brand/visto-logo.png" alt="Visto" width={96} height={38} />
+        </a>
+        <div className="nav-links">
+          {NAV.map((n) => <a key={n.href} href={n.href}>{n.label}</a>)}
         </div>
-      </header>
-
-      {/* 2. HERO SECTION */}
-      <section className="hero">
-        <div className="container hero-container">
-          <div className="hero-content animate-fade-in">
-            <div className="hero-badge">
-              <Sparkles size={16} />
-              <span>Plataforma #1 para WhatsApp</span>
-            </div>
-
-            <h1>
-              A nova geração de <span className="text-gradient">gestão inteligente</span> para lojas que vendem pelo WhatsApp.
-            </h1>
-
-            <p className="hero-subtitle">
-              Catálogo, provador virtual com IA, reservas, pagamentos e automações em um único lugar.
-            </p>
-
-            <div className="hero-actions">
-              <button className="btn btn-primary">
-                🚀 Criar minha loja grátis
-              </button>
-              <button className="btn btn-secondary">
-                <Play size={18} /> Ver demonstração
-              </button>
-            </div>
-
-            <div className="hero-microcopy">
-              <Check size={14} className="check-icon" /> Sem cartão de crédito &bull; Setup em 2 minutos
-            </div>
-          </div>
-
-          <div className="hero-visual animate-fade-in delay-200">
-            <img src="/mockup1.png" alt="Visto Dashboard" className="hero-mockup" />
-          </div>
+        <div className="nav-actions">
+                    <button type="button" className="btn btn-primary btn-sm" onClick={onCta}>Começar agora</button>
         </div>
-      </section>
+        <button
+          className="nav-toggle"
+          aria-label={open ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={open}
+          aria-controls="mobile-menu"
+          onClick={() => setOpen((v) => !v)}
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </nav>
 
-      {/* 3. SOCIAL PROOF */}
-      <section className="social-proof animate-fade-in delay-300">
-        <div className="container">
-          <p>Confiado por lojas que vendem todos os dias pelo WhatsApp</p>
-          <div className="logos-grid">
-            <div className="logo-placeholder">Acme Corp</div>
-            <div className="logo-placeholder">Globex</div>
-            <div className="logo-placeholder">Soylent</div>
-            <div className="logo-placeholder">Initech</div>
-            <div className="logo-placeholder">Umbrella</div>
-          </div>
+      <div id="mobile-menu" className="mobile-menu glass" hidden={!open}>
+        {NAV.map((n) => (
+          <a key={n.href} href={n.href} onClick={() => setOpen(false)}>
+            {n.label} <ArrowUpRight size={16} />
+          </a>
+        ))}
+        <div className="mobile-menu-actions">
+                    <button type="button" className="btn btn-primary" onClick={() => { setOpen(false); onCta(); }}>Começar agora</button>
         </div>
-      </section>
+      </div>
+    </header>
+  );
+}
 
-      {/* 4. METRICS */}
-      <section className="section metrics">
-        <div className="container">
-          <div className="metrics-grid">
-            <div className="metric-card">
-              <div className="metric-value text-gradient">+70k</div>
-              <div className="metric-label">clientes atendidos</div>
+/* ---------- product UI fragments (illustrative) ---------- */
+
+function DashboardMock() {
+  const bars = [38, 52, 44, 66, 58, 74, 62, 82, 70, 88, 76, 92];
+  return (
+    <div className="ui ui-dashboard">
+      <div className="ui-chrome">
+        <span /><span /><span />
+        <div className="ui-url">app.visto · Visão geral</div>
+      </div>
+      <div className="ui-dash-body">
+        <aside className="ui-side">
+          <img src="/brand/visto-logo.png" alt="" className="ui-side-logo" />
+          {[
+            [BarChart3, 'Visão geral', true], [Users, 'Clientes', false], [MessageCircle, 'Atendimento', false],
+            [Megaphone, 'Campanhas', false], [ShoppingBag, 'Catálogo', false], [Gift, 'Fidelidade', false],
+          ].map(([Icon, label, active]) => {
+            const I = Icon as typeof Users;
+            return <div key={label as string} className={`ui-side-item ${active ? 'on' : ''}`}><I size={14} />{label as string}</div>;
+          })}
+        </aside>
+        <div className="ui-main">
+          <div className="ui-row-head">
+            <div>
+              <div className="ui-h">Bom dia, Ateliê Aurora</div>
+              <div className="ui-sub">Resumo da semana</div>
             </div>
-            <div className="metric-card">
-              <div className="metric-value text-gradient">50K</div>
-              <div className="metric-label">reservas realizadas</div>
-            </div>
-            <div className="metric-card">
-              <div className="metric-value text-gradient">3x</div>
-              <div className="metric-label">mais conversão com provador</div>
-            </div>
-            <div className="metric-card">
-              <div className="metric-value text-gradient">90%</div>
-              <div className="metric-label">menos tempo no atendimento</div>
+            <div className="ui-chip"><Sparkles size={12} /> 3 oportunidades novas</div>
+          </div>
+          <div className="ui-kpis">
+            {[['Conversas', '128'], ['Clientes ativos', '342'], ['Campanhas', '4']].map(([k, v]) => (
+              <div key={k} className="ui-kpi"><span>{k}</span><strong>{v}</strong></div>
+            ))}
+          </div>
+          <div className="ui-chart">
+            <div className="ui-chart-head"><span>Oportunidades identificadas</span><span className="ui-muted">12 semanas</span></div>
+            <div className="ui-bars">
+              {bars.map((h, i) => <i key={i} style={{ height: `${h}%` }} />)}
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </div>
+  );
+}
 
-      {/* 5. O QUE É O VISTO */}
-      <section id="produto" className="section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Tudo que sua loja precisa para vender mais — <span className="text-gradient">automaticamente.</span></h2>
-          </div>
-
-          <div className="features-grid">
-            <div className="feature-item">
-              <div className="feature-icon"><ShoppingBag /></div>
-              <h3 className="feature-title">Catálogo inteligente</h3>
-              <p className="feature-desc">Seus produtos organizados e fáceis de compartilhar no WhatsApp.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><Users /></div>
-              <h3 className="feature-title">CRM de clientes</h3>
-              <p className="feature-desc">Histórico completo, preferências e gestão do relacionamento.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><Clock /></div>
-              <h3 className="feature-title">Reservas online</h3>
-              <p className="feature-desc">Agendamento de provador presencial e retirada na loja.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><CreditCard /></div>
-              <h3 className="feature-title">Pagamentos automáticos</h3>
-              <p className="feature-desc">Links de pagamento direto na conversa, sem maquininha.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><Sparkles /></div>
-              <h3 className="feature-title">Provador virtual IA</h3>
-              <p className="feature-desc">O cliente vê como a roupa fica no corpo antes de comprar.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><MessageCircle /></div>
-              <h3 className="feature-title">Automação de WhatsApp</h3>
-              <p className="feature-desc">Respostas rápidas e funil de vendas automatizado.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><LayoutDashboard /></div>
-              <h3 className="feature-title">Gestão de equipe</h3>
-              <p className="feature-desc">Vários atendentes no mesmo número de WhatsApp.</p>
-            </div>
-            <div className="feature-item">
-              <div className="feature-icon"><BarChart3 /></div>
-              <h3 className="feature-title">Relatórios em tempo real</h3>
-              <p className="feature-desc">Acompanhe métricas, vendas e conversões ao vivo.</p>
-            </div>
-          </div>
+function CrmMock({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`ui ui-card glass-card ui-crm ${compact ? 'is-compact' : ''}`}>
+      <div className="ui-card-head">
+        <div className="avatar a1">MC</div>
+        <div>
+          <div className="ui-h">Marina Costa</div>
+          <div className="ui-sub">Cliente desde mar/2024</div>
         </div>
-      </section>
+        <span className="tag tag-blue">VIP</span>
+      </div>
+      <div className="ui-label">Preferências</div>
+      <div className="ui-tags">
+        <span className="tag">Vestidos</span><span className="tag">Vermelho</span><span className="tag">Tam. M</span>
+      </div>
+      {!compact && (
+        <>
+          <div className="ui-label">Última compra</div>
+          <div className="ui-line"><Shirt size={14} /> Vestido midi vermelho <span className="ui-muted">· há 18 dias</span></div>
+        </>
+      )}
+    </div>
+  );
+}
 
-      {/* 6. PRIMARY FEATURE - VIRTUAL TRY-ON */}
-      <section className="section highlight-feature">
-        <div className="container highlight-container">
-          <div className="highlight-content">
-            <h2>O provador virtual que faz o cliente comprar <span className="text-gradient">sem sair do WhatsApp.</span></h2>
-            <p className="text-lg">
-              Ofereça uma experiência premium e elimine objeções de tamanho ou caimento. Nossa IA gera fotos ultra-realistas dos seus clientes usando suas peças.
-            </p>
-
-            <div className="highlight-list">
-              <div className="highlight-list-item">
-                <Check className="highlight-list-icon" /> Comparação Antes / Depois
-              </div>
-              <div className="highlight-list-item">
-                <Check className="highlight-list-icon" /> Geração instantânea de looks
-              </div>
-              <div className="highlight-list-item">
-                <Check className="highlight-list-icon" /> Compartilhamento direto com o cliente
-              </div>
-            </div>
-
-            <button className="btn btn-primary" style={{ marginTop: '1rem' }}>
-              Testar agora <ArrowRight size={18} />
-            </button>
-          </div>
-
-          <div className="highlight-visual">
-            <img src="/mockup2.png" alt="Provador Virtual IA" className="try-on-mockup" />
-          </div>
+function ChatMock() {
+  return (
+    <div className="ui ui-card glass-card ui-chat">
+      <div className="ui-card-head">
+        <div className="wa-dot"><MessageCircle size={14} /></div>
+        <div>
+          <div className="ui-h">WhatsApp</div>
+          <div className="ui-sub">Atendimento com IA</div>
         </div>
-      </section>
+      </div>
+      <div className="bubble in">Oi! Chegou algum vestido novo?</div>
+      <div className="bubble out">Chegou sim, Marina! Separei 3 modelos no seu tamanho 💙</div>
+      <div className="typing"><i /><i /><i /></div>
+    </div>
+  );
+}
 
-      {/* 7. HOW IT WORKS */}
-      <section id="como-funciona" className="section">
-        <div className="container">
-          <div className="section-header">
-            <h2>Como funciona</h2>
-            <p className="text-lg">Comece a usar em menos de 5 minutos</p>
-          </div>
-
-          <div className="steps-grid">
-            <div className="step-card">
-              <div className="step-number">1</div>
-              <h3>Crie sua loja</h3>
-              <p>Cadastre seus produtos e defina suas preferências de pagamento em poucos cliques.</p>
-            </div>
-            <div className="step-card">
-              <div className="step-number">2</div>
-              <h3>Conecte seu WhatsApp</h3>
-              <p>Integre seu número e ative múltiplos atendentes na mesma conta instantaneamente.</p>
-            </div>
-            <div className="step-card">
-              <div className="step-number">3</div>
-              <h3>Comece a vender com IA</h3>
-              <p>Envie links, gere provadores virtuais e feche vendas de forma automatizada.</p>
-            </div>
-          </div>
+function CampaignMock() {
+  return (
+    <div className="ui ui-card glass-card ui-campaign">
+      <div className="ui-card-head">
+        <div className="icon-tile"><Megaphone size={15} /></div>
+        <div>
+          <div className="ui-h">Nova coleção · Verão</div>
+          <div className="ui-sub">Campanha segmentada</div>
         </div>
-      </section>
+      </div>
+      <div className="ui-progress"><i style={{ width: '72%' }} /></div>
+      <div className="ui-line ui-muted">24 clientes compatíveis · aguardando aprovação</div>
+    </div>
+  );
+}
 
-      {/* 8. PARA QUEM É */}
-      <section id="solucoes" className="section audience">
-        <div className="container">
-          <div className="section-header">
-            <h2>Feito para o seu negócio</h2>
+function RecoMock() {
+  return (
+    <div className="ui ui-card glass-card ui-reco">
+      <div className="ui-label"><Sparkles size={12} /> Recomendado para Marina</div>
+      <div className="reco-items">
+        {['r1', 'r2', 'r3'].map((c) => <div key={c} className={`reco-thumb ${c}`}><Shirt size={20} /></div>)}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- page ---------- */
+
+function App() {
+  useReveal();
+  const [leadOpen, setLeadOpen] = useState(false);
+  const openLead = () => setLeadOpen(true);
+
+  return (
+    <div className="app" id="top">
+      <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
+      <Header onCta={openLead} />
+
+      <main id="conteudo">
+        {/* HERO */}
+        <section className="hero">
+          <div className="hero-atmos" aria-hidden="true" />
+          <div className="container hero-copy">
+            <Reveal>
+              <span className="badge glass"><span className="badge-dot" />Inteligência artificial para o varejo de moda</span>
+            </Reveal>
+            <Reveal delay={80}>
+              <h1>
+                Sua loja vende mais.<br />
+                <span className="text-blue">Sua inteligência trabalha por você.</span>
+              </h1>
+            </Reveal>
+            <Reveal delay={160}>
+              <p className="hero-sub">
+                Transforme o atendimento, o relacionamento e as vendas da sua loja com uma inteligência artificial
+                que conhece seus clientes, identifica oportunidades e ajuda sua operação a crescer.
+              </p>
+            </Reveal>
+            <Reveal delay={240} className="hero-ctas">
+              <button type="button" className="btn btn-primary btn-lg" onClick={openLead}>Conhecer o Visto <ArrowRight size={18} /></button>
+              <a href="#como-funciona" className="btn btn-glass btn-lg">Ver como funciona</a>
+            </Reveal>
           </div>
 
-          <div className="audience-grid">
-            <div className="audience-card">
-              <ShoppingBag size={32} className="icon" />
-              <h4>Lojas de roupas</h4>
+          <Reveal delay={300} className="container hero-stage-wrap">
+            <div className="hero-stage" aria-label="Prévia ilustrativa da plataforma Visto">
+              <div className="stage-main"><DashboardMock /></div>
+              <div className="float f-crm"><CrmMock /></div>
+              <div className="float f-chat"><ChatMock /></div>
+              <div className="float f-campaign"><CampaignMock /></div>
+              <div className="float f-reco"><RecoMock /></div>
             </div>
-            <div className="audience-card">
-              <LayoutDashboard size={32} className="icon" />
-              <h4>Franquias</h4>
-            </div>
-            <div className="audience-card">
-              <Users size={32} className="icon" />
-              <h4>Personal shoppers</h4>
-            </div>
-            <div className="audience-card">
-              <Store size={32} className="icon" />
-              <h4>Showrooms</h4>
-            </div>
-            <div className="audience-card">
-              <Smartphone size={32} className="icon" />
-              <h4>E-commerce físico + digital</h4>
+            <p className="demo-note">Interface ilustrativa · dados demonstrativos</p>
+          </Reveal>
+        </section>
+
+        {/* PROBLEMA */}
+        <section className="section">
+          <div className="container">
+            <SectionHead
+              eyebrow="O problema"
+              title={<>Sua loja pode estar perdendo<br className="br-d" /> vendas todos os dias.</>}
+            />
+            <div className="problem-grid">
+              <Reveal className="problem-card">
+                <div className="problem-ill">
+                  <div className="mini-list">
+                    {['Juliana R.', 'Camila S.', 'Patrícia M.'].map((n, i) => (
+                      <div key={n} className="mini-row"><span className={`avatar sm a${i + 2}`}>{n[0]}</span>{n}<span className="ui-muted mini-r">sem contato há {[94, 132, 187][i]}d</span></div>
+                    ))}
+                  </div>
+                </div>
+                <div className="icon-tile"><UserX size={18} /></div>
+                <h3>Clientes esquecidos</h3>
+                <p>Clientes compram uma vez e nunca mais recebem uma abordagem personalizada.</p>
+              </Reveal>
+              <Reveal delay={90} className="problem-card">
+                <div className="problem-ill">
+                  <div className="mini-products">
+                    {['r1', 'r2', 'r3'].map((c) => <div key={c} className={`reco-thumb ${c}`}><Shirt size={18} /></div>)}
+                  </div>
+                  <div className="mini-caption"><PackageOpen size={13} /> 12 novidades · 0 clientes avisados</div>
+                </div>
+                <div className="icon-tile"><PackageOpen size={18} /></div>
+                <h3>Oportunidades desperdiçadas</h3>
+                <p>Novas coleções chegam, mas os produtos não são apresentados aos clientes com maior interesse.</p>
+              </Reveal>
+              <Reveal delay={180} className="problem-card">
+                <div className="problem-ill">
+                  <div className="bubble in sm">Ainda tem no tamanho P?</div>
+                  <div className="mini-caption warn"><Clock size={13} /> Sem resposta há 2 dias</div>
+                </div>
+                <div className="icon-tile"><MessageSquareOff size={18} /></div>
+                <h3>Atendimento sem inteligência</h3>
+                <p>Conversas ficam esquecidas e informações importantes deixam de ser aproveitadas.</p>
+              </Reveal>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 9. PREÇOS */}
-      <section id="precos" className="section bg-color">
-        <div className="container">
-          <div className="section-header">
-            <h2>Planos simples e transparentes</h2>
-            <p className="text-lg">Plataforma gratuita + créditos para IA. Use apenas o que precisar.</p>
+        {/* FUNCIONALIDADES */}
+        <section id="produto" className="section section-alt">
+          <div className="container">
+            <SectionHead
+              eyebrow="Funcionalidades"
+              title={<>Tudo o que sua loja precisa para<br className="br-d" /> vender de forma <span className="text-blue">mais inteligente.</span></>}
+            />
+            <div className="bento">
+              <Reveal className="bento-card b-crm featured">
+                <div className="bento-copy">
+                  <div className="icon-tile"><Users size={18} /></div>
+                  <h3>CRM inteligente</h3>
+                  <p>Histórico de compras, preferências, comportamento e relacionamento de cada cliente em um só lugar.</p>
+                </div>
+                <div className="bento-visual"><CrmMock /></div>
+              </Reveal>
+              <Reveal delay={80} className="bento-card b-reco featured">
+                <div className="bento-copy">
+                  <div className="icon-tile"><Sparkles size={18} /></div>
+                  <h3>Recomendações personalizadas</h3>
+                  <p>Identificação de produtos compatíveis com os interesses de cada cliente.</p>
+                </div>
+                <div className="bento-visual"><RecoMock /></div>
+              </Reveal>
+              <Reveal className="bento-card b-chat">
+                <div className="icon-tile"><MessageCircle size={18} /></div>
+                <h3>Atendimento com IA</h3>
+                <p>Respostas e acompanhamento de clientes pelo WhatsApp.</p>
+              </Reveal>
+              <Reveal delay={60} className="bento-card b-camp">
+                <div className="icon-tile"><Megaphone size={18} /></div>
+                <h3>Campanhas automatizadas</h3>
+                <p>Comunicação segmentada para coleções, promoções e oportunidades.</p>
+              </Reveal>
+              <Reveal delay={120} className="bento-card b-loyal">
+                <div className="icon-tile"><Gift size={18} /></div>
+                <h3>Programa de fidelidade</h3>
+                <p>Acúmulo de pontos e incentivos à recompra.</p>
+              </Reveal>
+              <Reveal className="bento-card b-react">
+                <div className="icon-tile"><RefreshCcw size={18} /></div>
+                <h3>Reativação de clientes</h3>
+                <p>Identificação de clientes inativos e novas oportunidades de relacionamento.</p>
+              </Reveal>
+              <Reveal delay={60} className="bento-card b-intel">
+                <div className="icon-tile"><BarChart3 size={18} /></div>
+                <h3>Inteligência comercial</h3>
+                <p>Indicadores para acompanhar atendimentos, campanhas e oportunidades.</p>
+              </Reveal>
+              <Reveal delay={120} className="bento-card b-tryon">
+                <div className="icon-tile"><Shirt size={18} /></div>
+                <h3>Catálogo e provador virtual</h3>
+                <p>Catálogo, reservas, pagamentos e provador com IA, direto na conversa.</p>
+              </Reveal>
+            </div>
           </div>
+        </section>
 
-          <div className="pricing-grid">
-            <div className="pricing-card">
-              <div className="price-header">
-                <h3 className="price-title">Free</h3>
-                <p>Ideal para começar</p>
-              </div>
-              <div className="price-amount">R$ 0<span>/mês</span></div>
+        {/* DIFERENCIAL */}
+        <section id="diferencial" className="section diff">
+          <div className="diff-atmos" aria-hidden="true" />
+          <div className="container">
+            <SectionHead
+              eyebrow="O diferencial"
+              title={<>Chegou uma nova coleção.<br /><span className="text-blue">O Visto já sabe quem pode querer comprar.</span></>}
+              sub="Uma cliente comprou um vestido vermelho. Dias depois, novos vestidos vermelhos chegam ao catálogo. O Visto cruza o histórico do CRM e prepara recomendações e campanhas para quem tem esse perfil."
+            />
+            <div className="flow" role="list">
+              <Reveal className="flow-step">
+                <div role="listitem">
+                  <span className="flow-n">01</span>
+                  <div className="flow-card glass-card">
+                    <div className="ui-label"><Bell size={12} /> Novo produto</div>
+                    <div className="flow-product">
+                      <div className="reco-thumb r1"><Shirt size={20} /></div>
+                      <div><div className="ui-h">Vestido longo rubi</div><div className="ui-sub">Coleção Verão · P ao G</div></div>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={100} className="flow-step">
+                <div role="listitem">
+                  <span className="flow-n">02</span>
+                  <div className="flow-card glass-card">
+                    <div className="ui-label"><Brain size={12} /> CRM inteligente</div>
+                    <div className="ui-line"><Search size={14} /> Preferência: <strong>vestidos · vermelho</strong></div>
+                    <div className="scan"><i /></div>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={200} className="flow-step">
+                <div role="listitem">
+                  <span className="flow-n">03</span>
+                  <div className="flow-card glass-card">
+                    <div className="ui-label"><Users size={12} /> Clientes compatíveis</div>
+                    <div className="stack">
+                      {['MC', 'JR', 'AL', 'BF'].map((a, i) => <span key={a} className={`avatar sm a${i + 1}`}>{a}</span>)}
+                      <span className="stack-more">+20</span>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={300} className="flow-step">
+                <div role="listitem">
+                  <span className="flow-n">04</span>
+                  <div className="flow-card glass-card flow-final">
+                    <div className="ui-label"><Send size={12} /> Campanha personalizada</div>
+                    <div className="bubble out sm">Marina, chegou um vestido que é a sua cara ❤️</div>
+                    <div className="ui-sub"><Check size={12} /> Pronta para revisão da loja</div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
 
-              <ul className="price-features">
-                <li><Check size={18} className="check-icon" /> Catálogo ilimitado</li>
-                <li><Check size={18} className="check-icon" /> CRM básico</li>
-                <li><Check size={18} className="check-icon" /> Gestão de reservas</li>
-                <li><Check size={18} className="check-icon" /> Integrações básicas</li>
+        {/* FIDELIZAÇÃO */}
+        <section className="section section-alt">
+          <div className="container loyalty">
+            <Reveal className="loyalty-copy">
+              <span className="eyebrow">Fidelização</span>
+              <h2>Cada compra é o começo <span className="text-blue">da próxima.</span></h2>
+              <p>O Visto mantém o relacionamento vivo: entende quem é cada cliente e cria o motivo certo para ela voltar.</p>
+              <ul className="check-list">
+                {['Histórico de compras e preferências individuais', 'Segmentação de clientes', 'Pontos de fidelidade e incentivos à recompra', 'Campanhas personalizadas', 'Reativação de clientes inativos'].map((t) => (
+                  <li key={t}><span className="check"><Check size={13} /></span>{t}</li>
+                ))}
               </ul>
-              <button className="btn btn-secondary" style={{ width: '100%' }}>Começar grátis</button>
-            </div>
-
-            <div className="pricing-card popular">
-              <div className="popular-badge">Mais escolhido</div>
-              <div className="price-header">
-                <h3 className="price-title">Pro</h3>
-                <p>Para lojas em crescimento</p>
+            </Reveal>
+            <Reveal delay={120} className="loyalty-visual">
+              <div className="loyal-card glass-card l-points">
+                <div className="ui-card-head">
+                  <div className="icon-tile"><Star size={15} /></div>
+                  <div><div className="ui-h">Clube Aurora</div><div className="ui-sub">Marina Costa</div></div>
+                </div>
+                <div className="points"><strong>1.240</strong><span>pontos</span></div>
+                <div className="ui-progress"><i style={{ width: '62%' }} /></div>
+                <div className="ui-sub">Faltam 760 pontos para o próximo benefício</div>
               </div>
-              <div className="price-amount">R$ 97<span>/mês</span></div>
-
-              <ul className="price-features">
-                <li><Check size={18} className="check-icon" /> Tudo do Free</li>
-                <li><Check size={18} className="check-icon" /> Automação de WhatsApp</li>
-                <li><Check size={18} className="check-icon" /> Relatórios avançados</li>
-                <li><Check size={18} className="check-icon" /> Gestão de Equipe</li>
-                <li><Check size={18} className="check-icon" /> Integrações premium</li>
-              </ul>
-              <button className="btn btn-primary" style={{ width: '100%' }}>Assinar Pro</button>
-            </div>
-
-            <div className="pricing-card" style={{ background: '#0F0F0F', color: 'white' }}>
-              <div className="price-header">
-                <h3 className="price-title" style={{ color: 'white' }}>Créditos de IA</h3>
-                <p style={{ color: '#9CA3AF' }}>Use apenas quando gerar imagens</p>
+              <div className="loyal-card glass-card l-history">
+                <div className="ui-label">Histórico</div>
+                {[['Vestido midi vermelho', 'mar'], ['Blazer linho', 'jan'], ['Saia plissada', 'nov']].map(([p, m]) => (
+                  <div key={p} className="hist-row"><ShoppingBag size={13} />{p}<span className="ui-muted">{m}</span></div>
+                ))}
               </div>
-              <div className="price-amount" style={{ color: 'white' }}>R$ 49<span>/pacote</span></div>
+              <div className="loyal-card glass-card l-segment">
+                <div className="ui-label"><Heart size={12} /> Segmentos</div>
+                <div className="ui-tags">
+                  <span className="tag tag-blue">Fiéis</span><span className="tag">Novas</span><span className="tag">Inativas 90d+</span>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
 
-              <ul className="price-features" style={{ color: '#D1D5DB' }}>
-                <li style={{ color: '#D1D5DB' }}><Check size={18} className="check-icon" /> 500 gerações de looks</li>
-                <li style={{ color: '#D1D5DB' }}><Check size={18} className="check-icon" /> Alta resolução</li>
-                <li style={{ color: '#D1D5DB' }}><Check size={18} className="check-icon" /> Modelos diversificados</li>
-                <li style={{ color: '#D1D5DB' }}><Check size={18} className="check-icon" /> Sem validade</li>
-              </ul>
-              <button className="btn btn-primary" style={{ width: '100%', background: 'white', color: 'black' }}>Comprar Créditos</button>
+        {/* COMO FUNCIONA */}
+        <section id="como-funciona" className="section">
+          <div className="container">
+            <SectionHead
+              eyebrow="Como funciona"
+              title={<>Mais inteligência para sua loja.<br /><span className="text-muted">Menos trabalho manual.</span></>}
+            />
+            <div className="steps" role="list">
+              {[
+                [Plug, '01', 'Conecte sua operação', 'Centralize informações, atendimento e oportunidades.'],
+                [Users, '02', 'Conheça seus clientes', 'Use o CRM para entender histórico de compras e preferências.'],
+                [Sparkles, '03', 'Venda com inteligência', 'Crie relacionamentos personalizados, campanhas e novas oportunidades.'],
+              ].map(([Icon, n, t, d], i) => {
+                const I = Icon as typeof Users;
+                return (
+                  <Reveal key={n as string} delay={i * 90} className="step">
+                    <div role="listitem">
+                      <div className="step-top"><span className="step-n">{n as string}</span><div className="icon-tile"><I size={18} /></div></div>
+                      <h3>{t as string}</h3>
+                      <p>{d as string}</p>
+                    </div>
+                  </Reveal>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 10. APP PREVIEW */}
-      <section className="section app-preview">
-        <div className="container">
-          <div className="section-header">
-            <h2>Tudo na palma da sua mão</h2>
-            <p className="text-lg">Gerencie sua loja e responda seus clientes de onde estiver.</p>
+        {/* CTA FINAL */}
+        <section id="contato" className="section cta-section">
+          <div className="container">
+            <Reveal className="cta-box">
+              <div className="cta-glow" aria-hidden="true" />
+              <h2>O futuro da sua loja começa com uma conversa.</h2>
+              <p>Descubra como o Visto pode transformar o atendimento, o relacionamento e as vendas do seu negócio.</p>
+              <button type="button" className="btn btn-white btn-lg" onClick={openLead}>Conhecer o Visto <ArrowRight size={18} /></button>
+            </Reveal>
           </div>
-          <div className="app-mockup-container">
-            <img src="/mockup3.png" alt="Mobile App Visto" className="app-mockup" />
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* 11. FINAL CTA */}
-      <section className="cta-section">
-        <div className="container">
-          <h2>Sua loja pronta para vender 24h por dia.</h2>
-          <p className="text-lg">Junte-se a mais de 70.000 clientes que já transformaram o atendimento via WhatsApp em uma máquina de vendas.</p>
-          <button className="btn btn-secondary">
-            Criar loja grátis
-          </button>
-        </div>
-      </section>
+      <LeadForm open={leadOpen} onClose={() => setLeadOpen(false)} />
 
-      {/* 12. FOOTER */}
       <footer className="footer">
         <div className="container">
           <div className="footer-grid">
             <div className="footer-brand">
-              <div className="logo-wrapper footer-logo">
-                <span className="logo-text">vist<span className="logo-o" style={{ color: 'var(--brand-color)' }}>O</span></span>
-              </div>
-              <p>A nova geração de gestão inteligente para lojas que vendem pelo WhatsApp.</p>
+              <img src="/brand/visto-logo.png" alt="Visto" width={110} height={44} loading="lazy" />
+              <p>Inteligência artificial para o varejo de moda.</p>
             </div>
-
             <div>
               <h4>Produto</h4>
-              <ul className="footer-links">
-                <li><a href="#">Funcionalidades</a></li>
-                <li><a href="#">Provador Virtual IA</a></li>
-                <li><a href="#">Preços</a></li>
-                <li><a href="#">Changelog</a></li>
+              <ul>
+                <li><a href="#produto">Funcionalidades</a></li>
+                <li><a href="#diferencial">Diferencial</a></li>
               </ul>
             </div>
-
             <div>
               <h4>Empresa</h4>
-              <ul className="footer-links">
+              <ul>
                 <li><a href="#">Sobre nós</a></li>
-                <li><a href="#">Carreiras</a></li>
                 <li><a href="#">Blog</a></li>
-                <li><a href="#">Contato</a></li>
+                <li><a href="#contato">Contato</a></li>
               </ul>
             </div>
-
             <div>
               <h4>Suporte</h4>
-              <ul className="footer-links">
+              <ul>
                 <li><a href="#">Central de Ajuda</a></li>
-                <li><a href="#">Status</a></li>
                 <li><a href="#">Termos de Uso</a></li>
                 <li><a href="#">Privacidade</a></li>
               </ul>
             </div>
           </div>
-
           <div className="footer-bottom">
-            <div>&copy; {new Date().getFullYear()} Visto. Todos os direitos reservados.</div>
-            <div className="social-links">
-              <a href="#"><Instagram size={20} /></a>
-              <a href="#"><Twitter size={20} /></a>
-              <a href="#"><Linkedin size={20} /></a>
+            <span>&copy; {new Date().getFullYear()} Visto. Todos os direitos reservados.</span>
+            <div className="social">
+              <a href="https://www.instagram.com/visto.app/" target="_blank" rel="noopener noreferrer" aria-label="Instagram do Visto"><Instagram size={18} /></a>
+              <a href="#" aria-label="LinkedIn"><Linkedin size={18} /></a>
             </div>
           </div>
         </div>
