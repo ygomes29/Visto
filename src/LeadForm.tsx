@@ -3,9 +3,11 @@ import { X, Check, ArrowRight, Loader2 } from 'lucide-react';
 
 /**
  * Lead capture form opened by every CTA.
- * Submissions are POSTed as JSON to VITE_LEAD_ENDPOINT (e.g. an n8n/Zapier/Formspree webhook).
+ * Submissions are POSTed as JSON to /api/lead (Vercel function that emails the lead),
+ * or to VITE_LEAD_ENDPOINT when set. In `vite dev` there is no /api, so leads are only logged.
  */
-const ENDPOINT = import.meta.env.VITE_LEAD_ENDPOINT as string | undefined;
+const ENDPOINT = (import.meta.env.VITE_LEAD_ENDPOINT as string | undefined)
+  || (import.meta.env.DEV ? undefined : '/api/lead');
 
 type Status = 'idle' | 'sending' | 'done' | 'error';
 
@@ -133,6 +135,7 @@ export default function LeadForm({ open, onClose }: { open: boolean; onClose: ()
                 <span>Mensagem <em>(opcional)</em></span>
                 <textarea name="mensagem" rows={3} placeholder="Conte um pouco sobre a sua operação" />
               </label>
+              <input type="text" name="empresa_site" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hp" />
               <label className="consent field-full">
                 <input type="checkbox" name="consentimento" value="sim" required />
                 <span>Aceito ser contatado(a) pelo Visto sobre o produto, conforme a LGPD.</span>

@@ -436,3 +436,4 @@
   .lead-panel { padding: 32px 20px 24px; border-radius: 28px 28px 0 0; max-height: 92dvh; }
   .lead-form { grid-template-columns: 1fr; }
 }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
